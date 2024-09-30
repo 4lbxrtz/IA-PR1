@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "ia-pr1"
+version = "0.1.0"
+description = ""
+authors = ["Alberto Oria Martín <91627701+4lbxrtz@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+ia-pr1 = "ia_pr1.main:main"
+
+[tool.ruff.lint]
+extend-select = [
+  "E",
+  "W",
+  "F",
+  "I",
+  "B",
+  "C4",
+  "UP",
+  "D",
+]
+ignore = ["D203", "D213"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
