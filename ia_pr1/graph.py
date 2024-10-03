@@ -69,17 +69,15 @@ class UndirectedGraph:
 
     def reconstruct_path(self, end, predesessor):
         """Reconstruct the path from start to end."""
-        path = [end]
+        path = []
         current = end
         total_cost = 0
-        if current is not None:
-            previous = predesessor.get(current)
-            if previous is None:
-                return [], 0
-            path.append(previous)
-            total_cost += self.weights[(previous, current)]
+        while current is not None:
+            path.insert(0, current)
+            previous = predesessor[current]
+            if previous is not None:
+                total_cost += self.weights[(previous, current)]
             current = previous
-        path.reverse()
         return path, total_cost
 
     def log_neighbors(self, node, log):
@@ -94,38 +92,35 @@ class UndirectedGraph:
     def dfs(self, start, end, visited=None, output_file="output.txt"):
         """Depth-first search."""
         stack = [start]
-        generated_log = []
+        generated = [start]
         inspected = []
         predecessor = {start: None}
         visited = {start: True}
-        iteration = 0
-        generated_log.append([start])
+        iteration = 1
+        self.log_iteration(iteration, generated.copy(), inspected.copy(), output_file)
         while stack:
-            iteration += 1
             current = stack.pop()
-            if current not in inspected:
-                inspected.append(current)
-                neighbors = self.get_neighbors(current)
-                generated_log.append(neighbors.copy())
+            visited[current] = True
+            inspected.append(current)
+            if current == end:
+                path, cost = self.reconstruct_path(end, predecessor)
+                iteration += 1
                 self.log_iteration(
-                    iteration, generated_log[-1], inspected.copy(), output_file
+                    iteration, generated.copy(), inspected.copy(), output_file
                 )
-                if current == end:
-                    path, cost = self.reconstruct_path(end, predecessor)
-                    return {
-                        "path": path,
-                        "cost": cost,
-                    }
-                unvisited_neighbors = self.get_unvisited_neighbors(current, visited)
-                unvisited_neighbors.sort(
-                    key=lambda n: self.weights.get((current, n), float("-inf")),
-                    reverse=True,
-                )
-                for neighbor in unvisited_neighbors:
-                    stack.append(neighbor)
-                    visited[neighbor] = True
-                    predecessor[neighbor] = current
-                inspected.append(current)
+                return {
+                    "path": path,
+                    "cost": cost,
+                }
+            unvisited_neighbors = self.get_unvisited_neighbors(current, visited)
+            for neighbor in unvisited_neighbors:
+                stack.append(neighbor)
+                generated.append(neighbor)
+                predecessor[neighbor] = current
+            iteration += 1
+            self.log_iteration(
+                iteration, generated.copy(), inspected.copy(), output_file
+            )
         return {
             "path": [],
             "cost": 0,
@@ -134,21 +129,21 @@ class UndirectedGraph:
     def bfs(self, start, end, visited=None, output_file="output.txt"):
         """Breadth-first search."""
         queue = [start]
-        generated_log = []
+        generated = [start]
         inspected = []
         predecessor = {start: None}
         visited = {start: True}
-        iteration = 0
+        iteration = 1
+        self.log_iteration(iteration, generated.copy(), inspected.copy(), output_file)
         while queue:
-            iteration += 1
             current = queue.pop(0)
-            neighbors = self.get_neighbors(current)
-            generated_log.append(neighbors.copy())
-            self.log_iteration(
-                iteration, generated_log[-1], inspected.copy(), output_file
-            )
+            inspected.append(current)
             if current == end:
                 path, cost = self.reconstruct_path(end, predecessor)
+                iteration += 1
+                self.log_iteration(
+                    iteration, generated.copy(), inspected.copy(), output_file
+                )
                 return {
                     "path": path,
                     "cost": cost,
@@ -156,41 +151,41 @@ class UndirectedGraph:
             unvisited_neighbors = self.get_unvisited_neighbors(current, visited)
             for neighbor in unvisited_neighbors:
                 queue.append(neighbor)
+                generated.append(neighbor)
                 visited[neighbor] = True
                 predecessor[neighbor] = current
-            inspected.append(current)
+            iteration += 1
+            self.log_iteration(
+                iteration, generated.copy(), inspected.copy(), output_file
+            )
         return {
             "path": [],
             "cost": 0,
         }
 
-    def traverse(self, start, end, algorithm="dfs", output_file="output.txt"):
+    def traverse(self, start, end, output_file, algorithm="dfs"):
         """Traverse the graph."""
-        with open(output_file, "w") as file:
-            file.write(f"--------------------------------\n")
-            file.write(f"Number of nodes: {len(self.get_nodes())}\n")
-            file.write(f"Number of edges: {len(self.get_edges())}\n")
-            file.write(f"Origin vertex: {start}\n")
-            file.write(f"Destination vertex: {end}\n")
-            file.write(f"--------------------------------\n")
+        output_file.write(f"--------------------------------\n")
+        output_file.write(f"Number of nodes: {len(self.get_nodes())}\n")
+        output_file.write(f"Number of edges: {len(self.get_edges())}\n")
+        output_file.write(f"Origin vertex: {start}\n")
+        output_file.write(f"Destination vertex: {end}\n")
+        output_file.write(f"--------------------------------\n")
         if algorithm == "dfs":
             result = self.dfs(start, end, output_file=output_file)
         elif algorithm == "bfs":
             result = self.bfs(start, end, output_file=output_file)
         else:
             raise ValueError(f"Unknown algorithm: {algorithm}")
+        output_file.write(f"--------------------------------\n")
+        output_file.write(f"Path: {' - '.join(map(str, result['path']))}\n")
+        output_file.write(f"--------------------------------\n")
+        output_file.write(f"Cost: {result['cost']}\n")
+        output_file.write(f"--------------------------------\n")
 
-        with open(output_file, "a") as file:
-            file.write(f"--------------------------------\n")
-            file.write(f"Path: {' - '.join(map(str, result['path']))}\n")
-            file.write(f"--------------------------------\n")
-            file.write(f"Cost: {result['cost']}\n")
-            file.write(f"--------------------------------\n")
-
-    def parse_file(self, filename):
+    def parse_file(self, file):
         """Parse the file and add the edges to the graph."""
-        with open(filename) as file:
-            lines = file.readlines()
+        lines = file.readlines()
         num_nodes = int(lines[0].strip())
         for i in range(1, num_nodes + 1):
             self.add_node(i)
@@ -205,12 +200,11 @@ class UndirectedGraph:
 
     def log_iteration(self, iteration, generated, inspected, output_file):
         """Log the iteration to the output file."""
-        with open(output_file, "a") as file:
-            file.write(f"--------------------------------\n")
-            file.write(f"Iteration: {iteration}\n")
-            file.write(f"Generated: {', '.join(map(str, generated))}\n")
-            file.write(
-                f"Inspected: {', '.join(map(str, inspected))}\n"
-                if inspected
-                else "'-'}\n"
-            )
+        output_file.write(f"--------------------------------\n")
+        output_file.write(f"Iteration: {iteration}\n")
+        output_file.write(f"Generated: {', '.join(map(str, generated))}\n")
+        output_file.write(
+            f"Inspected: {', '.join(map(str, inspected))}\n"
+            if inspected
+            else "Inspected: -\n"
+        )
