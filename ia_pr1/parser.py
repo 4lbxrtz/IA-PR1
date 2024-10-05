@@ -1,8 +1,9 @@
-"""Parser module"""
+"""Parser module."""
 
 # this module is responsible for parsing the arguments and the input file
 
 import argparse
+
 
 def parse_args():
     """Parse the arguments."""

@@ -1,6 +1,7 @@
 """Main module for the application."""
 
 from .graph import UndirectedGraph
+from .search_tree import SearchTree
 from .parser import parse_args
 
 

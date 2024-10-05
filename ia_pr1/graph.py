@@ -1,5 +1,7 @@
 """Graph module."""
 
+from .search_tree import SearchTree
+
 
 class UndirectedGraph:
     """Undirected Graph class."""
@@ -97,7 +99,9 @@ class UndirectedGraph:
         predecessor = {start: None}
         visited = {start: True}
         iteration = 1
+        search_tree = SearchTree()
         self.log_iteration(iteration, generated.copy(), inspected.copy(), output_file)
+        search_tree.log_tree(output_file)
         while stack:
             current = stack.pop()
             visited[current] = True
@@ -108,19 +112,24 @@ class UndirectedGraph:
                 self.log_iteration(
                     iteration, generated.copy(), inspected.copy(), output_file
                 )
+                search_tree.log_tree(output_file)
                 return {
                     "path": path,
                     "cost": cost,
                 }
             unvisited_neighbors = self.get_unvisited_neighbors(current, visited)
-            for neighbor in unvisited_neighbors:
+            for neighbor in reversed(unvisited_neighbors):
                 stack.append(neighbor)
                 generated.append(neighbor)
                 predecessor[neighbor] = current
+                search_tree.add_node(
+                    current, neighbor, cost=self.weights[(current, neighbor)]
+                )
             iteration += 1
             self.log_iteration(
                 iteration, generated.copy(), inspected.copy(), output_file
             )
+            search_tree.log_tree(output_file)
         return {
             "path": [],
             "cost": 0,
@@ -134,6 +143,7 @@ class UndirectedGraph:
         predecessor = {start: None}
         visited = {start: True}
         iteration = 1
+        search_tree = SearchTree()
         self.log_iteration(iteration, generated.copy(), inspected.copy(), output_file)
         while queue:
             current = queue.pop(0)
@@ -154,6 +164,9 @@ class UndirectedGraph:
                 generated.append(neighbor)
                 visited[neighbor] = True
                 predecessor[neighbor] = current
+                search_tree.add_node(
+                    current, neighbor, cost=self.weights[(current, neighbor)]
+                )
             iteration += 1
             self.log_iteration(
                 iteration, generated.copy(), inspected.copy(), output_file
