@@ -22,6 +22,20 @@ class SearchTree:
         """Return the neighbors of the node."""
         return self.tree.get(node, [])
 
+    def get_ancestors(self, node):
+        """Return the ancestors of the node."""
+        ancestors = []
+        current = node
+        while True:
+            parent = next(
+                (p for p, children in self.tree.items() if current in children), None
+            )
+            if parent is None:
+                break
+            ancestors.append(parent)
+            current = parent
+        return ancestors
+
     def get_cost(self, parent, node):
         """Return the cost of the edge between the parent and the node."""
         return self.path_costs.get((parent, node), None)
@@ -59,6 +73,7 @@ class SearchTree:
                     f"{parent} --> {child} (cost: {self.path_costs[(parent, child)]})\n"
                 )
             output.write("\n")
+            output.write(f"Ancestors of {parent}: {self.get_ancestors(parent)}\n\n")
         output.write(f"--- End of Search tree ---\n")
 
     def get_min_cost(self, parent, node):

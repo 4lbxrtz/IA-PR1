@@ -145,6 +145,7 @@ class UndirectedGraph:
         iteration = 1
         search_tree = SearchTree()
         self.log_iteration(iteration, generated.copy(), inspected.copy(), output_file)
+        search_tree.log_tree(output_file)
         while queue:
             current = queue.pop(0)
             inspected.append(current)
@@ -154,6 +155,7 @@ class UndirectedGraph:
                 self.log_iteration(
                     iteration, generated.copy(), inspected.copy(), output_file
                 )
+                search_tree.log_tree(output_file)
                 return {
                     "path": path,
                     "cost": cost,
@@ -171,6 +173,7 @@ class UndirectedGraph:
             self.log_iteration(
                 iteration, generated.copy(), inspected.copy(), output_file
             )
+            search_tree.log_tree(output_file)
         return {
             "path": [],
             "cost": 0,
