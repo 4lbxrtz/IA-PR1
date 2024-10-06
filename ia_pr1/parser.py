@@ -1,42 +1,21 @@
 """Parser module."""
 
-# this module is responsible for parsing the arguments and the input file
+from typing import TextIO
 
-import argparse
+from .graph import UndirectedGraph
 
 
-def parse_args():
-    """Parse the arguments."""
-    parser = argparse.ArgumentParser(description="Graph traversal")
-    parser.add_argument(
-        "--input",
-        type=argparse.FileType("r"),
-        required=True,
-        help="Input file with the graph data",
-    )
-    parser.add_argument(
-        "--output",
-        type=argparse.FileType("w"),
-        default="output.txt",
-        help="Output file with the traversal data",
-    )
-    parser.add_argument(
-        "--start",
-        type=int,
-        required=True,
-        help="Starting vertex for the traversal",
-    )
-    parser.add_argument(
-        "--end",
-        type=int,
-        required=True,
-        help="Ending vertex for the traversal",
-    )
-    parser.add_argument(
-        "--algorithm",
-        type=str,
-        required=True,
-        choices=["dfs", "bfs"],
-        help="Traversal algorithm",
-    )
-    return parser.parse_args()
+def parse_file(graph: UndirectedGraph, file: TextIO):
+    """Parse the file and add the edges to the graph."""
+    lines = file.readlines()
+    num_nodes = int(lines[0].strip())
+    for i in range(1, num_nodes + 1):
+        graph.add_node(i)
+    line_index = 1
+    for i in range(1, num_nodes + 1):
+        for j in range(i + 1, num_nodes + 1):
+            if line_index < len(lines):
+                weight = float(lines[line_index].strip())
+                if weight != -1:
+                    graph.add_edge(i, j, weight=weight)
+            line_index += 1

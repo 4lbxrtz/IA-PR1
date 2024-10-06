@@ -1,6 +1,6 @@
 """Graph module."""
 
-from .search_tree import SearchTree
+from .tree import Node
 
 
 class UndirectedGraph:
@@ -24,6 +24,10 @@ class UndirectedGraph:
         """Return the neighbors of the node."""
         return self.graph[node]
 
+    def get_unvisited_neighbors(self, node, visited):
+        """Return the unvisited neighbors of the node."""
+        return [n for n in self.get_neighbors(node) if n not in visited]
+
     def get_edges(self):
         """Return the edges of the graph."""
         for node in self.graph:
@@ -36,16 +40,9 @@ class UndirectedGraph:
         """Add an edge to the graph."""
         if weight == -1:
             return
-        if node1 not in self.graph and node2 not in self.graph:
-            self.edges.append((node1, node2))
-        if node1 not in self.graph:
-            self.graph[node1] = []
-        if node2 not in self.graph:
-            self.graph[node2] = []
-        self.graph[node1].append(node2)
-        self.graph[node2].append(node1)
-        self.weights[(node1, node2)] = weight
-        self.weights[(node2, node1)] = weight
+        self.graph.setdefault(node1, []).append(node2)
+        self.graph.setdefault(node2, []).append(node1)
+        self.weights[(node1, node2)] = self.weights[(node2, node1)] = weight
 
     def add_node(self, node):
         """Add a node to the graph."""
@@ -69,158 +66,99 @@ class UndirectedGraph:
                 del self.weights[(node, n)]
                 del self.weights[(n, node)]
 
-    def reconstruct_path(self, end, predesessor):
-        """Reconstruct the path from start to end."""
-        path = []
-        current = end
-        total_cost = 0
-        while current is not None:
-            path.insert(0, current)
-            previous = predesessor[current]
-            if previous is not None:
-                total_cost += self.weights[(previous, current)]
-            current = previous
-        return path, total_cost
-
-    def log_neighbors(self, node, log):
-        """Log the neighbors of the current node."""
-        neighbors = self.get_neighbors(node)
-        log.append(neighbors.copy())
-
-    def get_unvisited_neighbors(self, node, visited):
-        """Return the unvisited neighbors of the node."""
-        return [n for n in self.get_neighbors(node) if n not in visited]
-
-    def dfs(self, start, end, visited=None, output_file="output.txt"):
-        """Depth-first search."""
-        stack = [start]
-        generated = [start]
+    def dfs(self, start, end):
+        """Depth-first search using Node class."""
+        tree_root = Node(start)
+        generated = [tree_root.id]
         inspected = []
-        predecessor = {start: None}
-        visited = {start: True}
-        iteration = 1
-        search_tree = SearchTree()
-        self.log_iteration(iteration, generated.copy(), inspected.copy(), output_file)
-        search_tree.log_tree(output_file)
+        stack = [tree_root]
+        steps: list[dict[str, list]] = []
+        steps.append(
+            {
+                "generated": generated.copy(),
+                "inspected": inspected.copy(),
+            }
+        )
+        current: Node = None
         while stack:
             current = stack.pop()
-            visited[current] = True
-            inspected.append(current)
-            if current == end:
-                path, cost = self.reconstruct_path(end, predecessor)
-                iteration += 1
-                self.log_iteration(
-                    iteration, generated.copy(), inspected.copy(), output_file
+            inspected.append(current.id)
+            if current.id == end:
+                path = [ancestor.id for ancestor in current.node_path]
+                cost = sum(
+                    self.weights.get((path[i], path[i + 1]), 0)
+                    for i in range(len(path) - 1)
                 )
-                search_tree.log_tree(output_file)
-                return {
-                    "path": path,
-                    "cost": cost,
-                }
-            unvisited_neighbors = self.get_unvisited_neighbors(current, visited)
-            for neighbor in reversed(unvisited_neighbors):
-                stack.append(neighbor)
-                generated.append(neighbor)
-                predecessor[neighbor] = current
-                search_tree.add_node(
-                    current, neighbor, cost=self.weights[(current, neighbor)]
+                steps.append(
+                    {
+                        "generated": generated.copy(),
+                        "inspected": inspected.copy(),
+                    }
                 )
-            iteration += 1
-            self.log_iteration(
-                iteration, generated.copy(), inspected.copy(), output_file
+                return (path, cost, steps)
+            new_generated = [
+                neighbor
+                for neighbor in self.get_neighbors(current.id)
+                if neighbor not in [ancestor.id for ancestor in current.ancestors]
+            ]
+            generated.extend(new_generated)
+            stack.extend(
+                [
+                    Node(successor, parent=current)
+                    for successor in reversed(new_generated)
+                ]
             )
-            search_tree.log_tree(output_file)
-        return {
-            "path": [],
-            "cost": 0,
-        }
+            steps.append(
+                {
+                    "generated": generated.copy(),
+                    "inspected": inspected.copy(),
+                }
+            )
+        return(path, cost, steps)
 
-    def bfs(self, start, end, visited=None, output_file="output.txt"):
-        """Breadth-first search."""
-        queue = [start]
-        generated = [start]
+    def bfs(self, start, end):
+        """Breadth-first search using Node class."""
+        tree_root = Node(start)
+        generated = [tree_root.id]
         inspected = []
-        predecessor = {start: None}
-        visited = {start: True}
-        iteration = 1
-        search_tree = SearchTree()
-        self.log_iteration(iteration, generated.copy(), inspected.copy(), output_file)
-        search_tree.log_tree(output_file)
-        while queue:
-            current = queue.pop(0)
-            inspected.append(current)
-            if current == end:
-                path, cost = self.reconstruct_path(end, predecessor)
-                iteration += 1
-                self.log_iteration(
-                    iteration, generated.copy(), inspected.copy(), output_file
-                )
-                search_tree.log_tree(output_file)
-                return {
-                    "path": path,
-                    "cost": cost,
-                }
-            unvisited_neighbors = self.get_unvisited_neighbors(current, visited)
-            for neighbor in unvisited_neighbors:
-                queue.append(neighbor)
-                generated.append(neighbor)
-                visited[neighbor] = True
-                predecessor[neighbor] = current
-                search_tree.add_node(
-                    current, neighbor, cost=self.weights[(current, neighbor)]
-                )
-            iteration += 1
-            self.log_iteration(
-                iteration, generated.copy(), inspected.copy(), output_file
-            )
-            search_tree.log_tree(output_file)
-        return {
-            "path": [],
-            "cost": 0,
-        }
-
-    def traverse(self, start, end, output_file, algorithm="dfs"):
-        """Traverse the graph."""
-        output_file.write(f"--------------------------------\n")
-        output_file.write(f"Number of nodes: {len(self.get_nodes())}\n")
-        output_file.write(f"Number of edges: {len(self.get_edges())}\n")
-        output_file.write(f"Origin vertex: {start}\n")
-        output_file.write(f"Destination vertex: {end}\n")
-        output_file.write(f"--------------------------------\n")
-        if algorithm == "dfs":
-            result = self.dfs(start, end, output_file=output_file)
-        elif algorithm == "bfs":
-            result = self.bfs(start, end, output_file=output_file)
-        else:
-            raise ValueError(f"Unknown algorithm: {algorithm}")
-        output_file.write(f"--------------------------------\n")
-        output_file.write(f"Path: {' - '.join(map(str, result['path']))}\n")
-        output_file.write(f"--------------------------------\n")
-        output_file.write(f"Cost: {result['cost']}\n")
-        output_file.write(f"--------------------------------\n")
-
-    def parse_file(self, file):
-        """Parse the file and add the edges to the graph."""
-        lines = file.readlines()
-        num_nodes = int(lines[0].strip())
-        for i in range(1, num_nodes + 1):
-            self.add_node(i)
-        line_index = 1
-        for i in range(1, num_nodes + 1):
-            for j in range(i + 1, num_nodes + 1):
-                if line_index < len(lines):
-                    weight = float(lines[line_index].strip())
-                    if weight != -1:
-                        self.add_edge(i, j, weight=weight)
-                line_index += 1
-
-    def log_iteration(self, iteration, generated, inspected, output_file):
-        """Log the iteration to the output file."""
-        output_file.write(f"--------------------------------\n")
-        output_file.write(f"Iteration: {iteration}\n")
-        output_file.write(f"Generated: {', '.join(map(str, generated))}\n")
-        output_file.write(
-            f"Inspected: {', '.join(map(str, inspected))}\n"
-            if inspected
-            else "Inspected: -\n"
+        queue = [tree_root]
+        steps: list[dict[str, list]] = []
+        steps.append(
+            {
+                "generated": generated.copy(),
+                "inspected": inspected.copy(),
+            }
         )
+        current = None
+        while queue:
+            current: Node = queue.pop(0)
+            inspected.append(current.id)
+            if current.id == end:
+                path = [ancestor.id for ancestor in current.node_path]
+                cost = sum(
+                    self.weights.get((path[i], path[i + 1]), 0)
+                    for i in range(len(path) - 1)
+                )
+                steps.append(
+                    {
+                        "generated": generated.copy(),
+                        "inspected": inspected.copy(),
+                    }
+                )
+                return (path, cost, steps)
+            new_generated = [
+                neighbor
+                for neighbor in self.get_neighbors(current.id)
+                if neighbor not in [ancestor.id for ancestor in current.ancestors]
+            ]
+            generated.extend(new_generated)
+            queue.extend(
+                [Node(successor, parent=current) for successor in new_generated]
+            )
+            steps.append(
+                {
+                    "generated": generated.copy(),
+                    "inspected": inspected.copy(),
+                }
+            )
+        return (path, cost, steps)
