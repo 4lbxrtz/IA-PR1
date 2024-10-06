@@ -38,12 +38,3 @@ class Node:
             path.insert(0, current)  # Insert at the beginning to reverse the path
             current = current.parent
         return path
-
-    def prevent_cycle(self, node):
-        """Check if adding the given node would create a cycle in the tree."""
-        current = self
-        while current:
-            if current.id == node.id:
-                return True
-            current = current.parent
-        return False
