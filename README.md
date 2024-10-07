@@ -1,15 +1,14 @@
 # IA-PR1
 
-### Installation
+## Installation
 
-#### Prerequisites
+### Prerequisites
 
 Ensure you have [Poetry](https://python-poetry.org/docs/) installed to manage dependencies.
 
 Install Poetry using `pipx`:
 
 > 📝 If pipx is not already installed, you can follow any of the options in the [official pipx installation](https://pipx.pypa.io/stable/installation/) instructions. Any non-ancient version of pipx will do.
-
 
 ```bash
 pipx install poetry
@@ -39,7 +38,7 @@ poetry install
 
 ## Usage
 
-#### Activating the Virtual Environment
+### Activating the Virtual Environment
 
 Activate the virtual environment to ensure dependencies are correctly isolated:
 
