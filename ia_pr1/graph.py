@@ -66,6 +66,13 @@ class UndirectedGraph:
                 del self.weights[(node, n)]
                 del self.weights[(n, node)]
 
+    def path_cost(self, path):
+        """Return the cost of the path."""
+        return sum(
+                    self.weights.get((path[i], path[i + 1]), 0)
+                    for i in range(len(path) - 1)
+                )
+
     def dfs(self, start, end):
         """Depth-first search using Node class."""
         tree_root = Node(start)
@@ -85,10 +92,7 @@ class UndirectedGraph:
             inspected.append(current.id)
             if current.id == end:
                 path = [ancestor.id for ancestor in current.node_path]
-                cost = sum(
-                    self.weights.get((path[i], path[i + 1]), 0)
-                    for i in range(len(path) - 1)
-                )
+                cost = self.path_cost(path)
                 steps.append(
                     {
                         "generated": generated.copy(),
@@ -135,10 +139,7 @@ class UndirectedGraph:
             inspected.append(current.id)
             if current.id == end:
                 path = [ancestor.id for ancestor in current.node_path]
-                cost = sum(
-                    self.weights.get((path[i], path[i + 1]), 0)
-                    for i in range(len(path) - 1)
-                )
+                cost = self.path_cost(path)
                 steps.append(
                     {
                         "generated": generated.copy(),
