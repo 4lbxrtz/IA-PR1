@@ -4,13 +4,13 @@
 class Node:
     """Class representing a node in the search tree."""
 
-    def __init__(self, id, parent=None):
-        self.id = id  # Node ID
-        self.parent = parent  # Parent Node (None for root)
+    def __init__(self, id: int, parent=None):
+        self.id = id
+        self.parent = parent
         self.children = []
 
     @property
-    def ancestors(self):
+    def ancestors(self) -> list:
         """Return the list of ancestors for this node."""
         ancestors = []
         current = self
@@ -20,7 +20,7 @@ class Node:
         return ancestors
 
     @property
-    def neighbors(self):
+    def neighbors(self) -> list:
         """Return the list of neighbors for this node."""
         neighbors = []
         current = self
@@ -30,7 +30,7 @@ class Node:
         return neighbors
 
     @property
-    def node_path(self):
+    def node_path(self) -> list:
         """Return the path from the root to this node."""
         path = []
         current = self

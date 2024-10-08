@@ -17,12 +17,12 @@ def calculate_path_cost(graph: UndirectedGraph, path: list):
     return cost
 
 
-def traverse(graph, start, end, algorithm="dfs"):
+def traverse(graph: UndirectedGraph, start: int, end: int, algorithm: str ="dfs"):
     """Traverse the graph."""
     if algorithm == "dfs":
-        result = graph.dfs(start, end)
+        result: tuple[list, int, list] = graph.dfs(start, end)
     elif algorithm == "bfs":
-        result = graph.bfs(start, end)
+        result: tuple[list, int, list] = graph.bfs(start, end)
     else:
         raise ValueError(f"Unknown algorithm: {algorithm}")
     return result
@@ -30,9 +30,9 @@ def traverse(graph, start, end, algorithm="dfs"):
 
 def print_result(
     graph: UndirectedGraph,
-    start,
-    end,
-    result: tuple[list, float, list],
+    start: int,
+    end: int,
+    result: tuple[list, int, list],
     output_file: TextIO,
 ):
     """Print the result to the output file."""

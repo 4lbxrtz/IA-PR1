@@ -1,5 +1,7 @@
 """Graph module."""
 
+import random
+
 from .tree import Node
 
 
@@ -69,9 +71,8 @@ class UndirectedGraph:
     def path_cost(self, path):
         """Return the cost of the path."""
         return sum(
-                    self.weights.get((path[i], path[i + 1]), 0)
-                    for i in range(len(path) - 1)
-                )
+            self.weights.get((path[i], path[i + 1]), 0) for i in range(len(path) - 1)
+        )
 
     def dfs(self, start, end):
         """Depth-first search using Node class."""
@@ -118,7 +119,11 @@ class UndirectedGraph:
                     "inspected": inspected.copy(),
                 }
             )
-        return(path, cost, steps)
+        if current != end:
+            print("The ending node was not found.")
+            path = [ancestor.id for ancestor in current.node_path]
+            return (path, -1, steps)
+        return (path, cost, steps)
 
     def bfs(self, start, end):
         """Breadth-first search using Node class."""
@@ -133,9 +138,23 @@ class UndirectedGraph:
                 "inspected": inspected.copy(),
             }
         )
+
+        def node_cost(node):
+            """Return the cost of the node."""
+            path = [ancestor.id for ancestor in node.node_path]
+            return self.path_cost(path)
+
         current = None
         while queue:
-            current: Node = queue.pop(0)
+            if len(queue) == 1:
+              current = queue.pop(0)
+            else:
+                node_costs = [(node, node_cost(node)) for node in queue]
+                if random.choice([True, False]):
+                    current, _ = min(node_costs, key=lambda x: x[1])
+                else:
+                    current, _ = max(node_costs, key=lambda x: x[1])
+                queue.remove(current)
             inspected.append(current.id)
             if current.id == end:
                 path = [ancestor.id for ancestor in current.node_path]
@@ -162,4 +181,8 @@ class UndirectedGraph:
                     "inspected": inspected.copy(),
                 }
             )
+        if current != end:
+            print("The ending node was not found.")
+            path = [ancestor.id for ancestor in current.node_path]
+            return (path, -1, steps)
         return (path, cost, steps)
